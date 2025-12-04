@@ -19,10 +19,17 @@ def canUnlockAll(boxes):
 
     while to_visit:
         current_box = to_visit.pop()
+        if not isinstance(current_box, int):
+            continue
+        if current_box < 0 or current_box >= len(boxes):
+            continue
+
         if current_box not in unlocked:
             unlocked.add(current_box)
             for key in boxes[current_box]:
-                if key not in unlocked:
+                if not isinstance(key, int):
+                    continue
+                if 0 <= key < len(boxes) and key not in unlocked:
                     to_visit.append(key)
 
     return len(unlocked) == len(boxes)
