@@ -1,45 +1,70 @@
 #!/usr/bin/python3
-"""Parse logs from stdin and compute metrics."""
-
+"""Read stdin logs and compute metrics."""
 import sys
 
 
-def print_stats(total_size, status_codes):
-    """Print accumulated metrics."""
-    print("File size: {}".format(total_size))
+VALID_CODES = [200, 301, 400, 401, 403, 404, 405, 500]
 
-    for code in sorted(status_codes):
-        if status_codes[code] > 0:
-            print("{}: {}".format(code, status_codes[code]))
+
+def print_stats(total_size, counts):
+    """Print current metrics."""
+    print("File size: {}".format(total_size))
+    for code in VALID_CODES:
+        if counts[code] > 0:
+            print("{}: {}".format(code, counts[code]))
+
+
+def parse_line(line):
+    """Parse one log line.
+
+    Returns status code and file size independently.
+    """
+    parts = line.strip().split()
+    status = None
+    size = None
+
+    try:
+        size = int(parts[-1])
+    except IndexError:
+        pass
+    except (TypeError, ValueError):
+        pass
+
+    try:
+        status = int(parts[-2])
+    except IndexError:
+        pass
+    except (TypeError, ValueError):
+        pass
+
+    return (status, size)
 
 
 def main():
-    """Read stdin and compute log statistics."""
+    """Run log parsing on stdin."""
     total_size = 0
     line_count = 0
-    valid_codes = (200, 301, 400, 401, 403, 404, 405, 500)
-    status_codes = {}
+    counts = {code: 0 for code in VALID_CODES}
 
     try:
         for line in sys.stdin:
             line_count += 1
-            parts = line.split()
 
-            try:
-                status = int(parts[-2])
-                size = int(parts[-1])
+            status, size = parse_line(line)
+            if size is not None:
                 total_size += size
 
-                if status in valid_codes:
-                    status_codes[status] = status_codes.get(status, 0) + 1
-            except (ValueError, IndexError):
-                pass
+            if status in counts:
+                counts[status] += 1
 
             if line_count % 10 == 0:
-                print_stats(total_size, status_codes)
-
+                print_stats(total_size, counts)
     except KeyboardInterrupt:
-        print_stats(total_size, status_codes)
+        print_stats(total_size, counts)
+        return
+
+    if line_count == 0 or line_count % 10 != 0:
+        print_stats(total_size, counts)
 
 
 if __name__ == "__main__":
