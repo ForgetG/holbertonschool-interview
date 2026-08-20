@@ -1,5 +1,6 @@
 #include "binary_trees.h"
 #include <limits.h>
+#include <stddef.h>
 
 /**
  * avl_check - Checks if a binary tree is a valid AVL tree
@@ -12,7 +13,8 @@
  */
 int avl_check(const binary_tree_t *tree, long min, long max, int *height)
 {
-	int left_height = 0, right_height = 0;
+	int left_height = 0;
+	int right_height = 0;
 
 	if (tree == NULL)
 	{
